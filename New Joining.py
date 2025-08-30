@@ -9,7 +9,7 @@ def import_data():
     service_account_file = r"C:\Users\skuma\OneDrive\Desktop\Python\rare-sunrise-446516-u4-897494306ac4.json"
     
     # Authenticate using the service account
-    creds = Credentials.from_service_account_file(
+    creds = Credentials.from_service_account_file(  
         service_account_file,
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
     )
