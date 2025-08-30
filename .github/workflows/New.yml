@@ -19,4 +19,4 @@ jobs:
         run: pip install gspread google-auth
 
       - name: Run script
-        run: python New Joining.py
+        run: python New_Joining.py
