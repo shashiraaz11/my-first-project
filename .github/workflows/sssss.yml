@@ -7,9 +7,11 @@ jobs:
   run-script:
     runs-on: ubuntu-latest
     env:
-  MY_API_KEY: ${{ secrets.MY_API_KEY }}
+      MY_API_KEY: ${{ secrets.MY_API_KEY }}
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
