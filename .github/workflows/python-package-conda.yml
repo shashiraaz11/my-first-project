@@ -22,11 +22,10 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-  run: |
-    pip install pandas gspread google-auth
+        run: |
+          pip install pandas gspread google-auth google-auth-oauthlib google-auth-httplib2
 
-
-      - name: All_allocation.py
+      - name: Run All_allocation.py
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
         run: |
