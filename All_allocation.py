@@ -4,7 +4,7 @@ import traceback
 from google.oauth2.service_account import Credentials
 
 # Path to the service account key
-SERVICE_ACCOUNT_FILE = r"C:\Users\skuma\OneDrive\Desktop\Python\rare-sunrise-446516-u4-897494306ac4.json"
+SERVICE_ACCOUNT_FILE = r"C:\Users\skuma\OneDrive\Desktop\my-first-project\All_allocation.py"
 
 # Destination Google Sheet (new one you provided)
 DEST_SHEET_URL = "https://docs.google.com/spreadsheets/d/1HGkBcL4mxgrTs5wNhWz9OgALIE-2pMoZ_P8P2vCsIls/edit?gid=1842610227#gid=1842610227"
@@ -202,3 +202,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
