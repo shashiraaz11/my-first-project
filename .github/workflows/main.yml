@@ -1,15 +1,19 @@
-name: All_allocation Automation
+name: All_collection_recovery
 
 on:
   push:
   schedule:
-    - cron: '30 2 * * *'   # 9:00 AM IST
-    - cron: '30 3 * * *'   # 10:00 AM IST
-    - cron: '30 4 * * *'   # 11:00 AM IST
+    - cron: '31 2 * * *'   # 8:01 AM IST
+    - cron: '31 4 * * *'   # 10:01 AM IST
+    - cron: '31 6 * * *'   # 12:01 PM IST
+    - cron: '31 8 * * *'   # 2:01 PM IST
+    - cron: '31 10 * * *'  # 4:01 PM IST
+    - cron: '31 12 * * *'  # 6:01 PM IST
+    - cron: '31 14 * * *'  # 8:01 PM IST
   workflow_dispatch:
 
 jobs:
-  run-allocation:
+  run-collection-recovery:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,19 +21,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas gspread google-auth
+          pip install gspread google-auth
 
-      - name: Run All_allocation.py
+      - name: Run All_collection_recovery.py Script
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
         run: |
-          echo "🚀 Starting All_allocation.py..."
-          python All_allocation.py
-          echo "✅ Script execution completed."
+          echo "🚀 Starting Collection & Recovery..."
+          python All_collection_recovery.py
+          echo "✅ Job completed successfully!"
