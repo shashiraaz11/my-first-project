@@ -75,6 +75,7 @@ SOURCES = [
 # ===========================
 # 📥 Functions
 # ===========================
+
 def get_data_from_source(client, url, sheet_name, columns, filter_column=2):
     """Fetch and filter data from source sheet (Delhi NCR)."""
     try:
@@ -88,9 +89,9 @@ def get_data_from_source(client, url, sheet_name, columns, filter_column=2):
             return pd.DataFrame(), []
 
         headers = df.iloc[0].tolist()
-        df = df.iloc[1:]  # Remove header
+        df = df.iloc[1:]  # Remove header row
 
-        # Filter by 'Delhi NCR'
+        # Filter by 'Delhi NCR' (case-insensitive)
         df_filtered = df[df.iloc[:, filter_column].astype(str).str.strip().str.lower() == "delhi ncr"]
         print(f"✅ Rows after filter: {len(df_filtered)}")
         return df_filtered, headers
