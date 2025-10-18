@@ -7,7 +7,6 @@ on:
     - cron: '30 3 * * *'   # 10:00 AM IST 
     - cron: '30 4 * * *'   # 11:00 AM IST
   workflow_dispatch:
-
 jobs:
   run-All_allocation:
     runs-on: ubuntu-latest
