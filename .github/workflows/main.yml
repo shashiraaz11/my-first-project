@@ -1,12 +1,12 @@
 name: All_allocation Automation
 
 on:
-  push:                            # Run when you push new commits
-  schedule:                        # Scheduled runs (times in UTC)
-    - cron: '30 2 * * *'           # 9:00 AM IST
-    - cron: '30 3 * * *'           # 10:00 AM IST 
-    - cron: '30 4 * * *'           # 11:00 AM IST
-  workflow_dispatch:               # Manual "Run workflow" button
+  push:
+  schedule:
+    - cron: '30 2 * * *'   # 9:00 AM IST
+    - cron: '30 3 * * *'   # 10:00 AM IST
+    - cron: '30 4 * * *'   # 11:00 AM IST
+  workflow_dispatch:
 
 jobs:
   run-allocation:
@@ -25,9 +25,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pandas gspread google-auth
-
-      - name: Show current time (debug)
-        run: date
 
       - name: Run All_allocation.py
         env:
