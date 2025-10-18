@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 # ===========================
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-SERVICE_ACCOUNT_FILE = r"C:\Users\USER\Desktop\google_sheets_project\crediantnal_keye.json"
+# Load credentials (env variable or local file)
 key_data = os.environ.get("ACCOUNT_KEY_JSON")
 
 if key_data:
@@ -19,17 +19,16 @@ if key_data:
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     print("✅ Using credentials from environment variable.")
 else:
+    SERVICE_ACCOUNT_FILE = r"C:\Users\skuma\OneDrive\Desktop\Python\rare-sunrise-446516-u4-897494306ac4.json"
     if not os.path.exists(SERVICE_ACCOUNT_FILE):
         raise FileNotFoundError("❌ No ACCOUNT_KEY_JSON env variable or local file found.")
     creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     print("✅ Using local service account file.")
 
-client = gspread.authorize(creds)
-
 # ===========================
-# 📊 Sheet Configurations
+# 📄 Sheet Configurations
 # ===========================
-DEST_SHEET_URL = "https://docs.google.com/spreadsheets/d/1HGkBcL4mxgrTs5wNhWz9OgALIE-2pMoZ_P8P2vCsIls/edit?gid=1842610227#gid=1842610227"
+DEST_SHEET_URL = "https://docs.google.com/spreadsheets/d/1HGkBcL4mxgrTs5wNhWz9OgALIE-2pMoZ_P8P2vCsIls/edit"
 DEST_SPREADSHEET_ID = "1HGkBcL4mxgrTs5wNhWz9OgALIE-2pMoZ_P8P2vCsIls"
 
 SOURCES = [
@@ -72,14 +71,14 @@ SOURCES = [
     }
 ]
 
-# ===========================
-# 📥 Functions
-# ===========================
+# ======================================
+# 🧩 Helper Functions for Data Handling
+# ======================================
 
 def get_data_from_source(client, url, sheet_name, columns, filter_column=2):
-    """Fetch and filter data from source sheet (Delhi NCR)."""
+    """Fetch and filter data from source Google Sheet."""
     try:
-        print(f"📖 Reading: {sheet_name} ({url})")
+        print(f"🔄 Reading data from: {sheet_name} | {url}")
         sheet = client.open_by_url(url).worksheet(sheet_name)
         data = sheet.get(columns, value_render_option='UNFORMATTED_VALUE')
 
@@ -89,9 +88,9 @@ def get_data_from_source(client, url, sheet_name, columns, filter_column=2):
             return pd.DataFrame(), []
 
         headers = df.iloc[0].tolist()
-        df = df.iloc[1:]  # Remove header row
+        df = df.iloc[1:]  # remove header
 
-        # Filter by 'Delhi NCR' (case-insensitive)
+        # Filter only "Delhi NCR"
         df_filtered = df[df.iloc[:, filter_column].astype(str).str.strip().str.lower() == "delhi ncr"]
         print(f"✅ Rows after filter: {len(df_filtered)}")
         return df_filtered, headers
@@ -103,13 +102,13 @@ def get_data_from_source(client, url, sheet_name, columns, filter_column=2):
 
 
 def update_destination(client, destination_url, sources):
-    """Merge data from all sources into destination."""
+    """Update destination Google Sheet with filtered data."""
     try:
         print("📂 Opening destination spreadsheet...")
         dest_sheet = client.open_by_url(destination_url)
 
         for source in sources:
-            print(f"\n🔄 Processing: {source['destination']}")
+            print(f"\n🚀 Processing source: {source['destination']}")
             df_filtered, headers = get_data_from_source(
                 client,
                 source["url"],
@@ -122,24 +121,21 @@ def update_destination(client, destination_url, sources):
                 print(f"⚠️ No data found for {source['destination']}")
                 continue
 
-            # Get or create worksheet
+            # Get or create destination worksheet
             try:
                 dest_worksheet = dest_sheet.worksheet(source["destination"])
             except gspread.exceptions.WorksheetNotFound:
-                print(f"🆕 Creating new sheet: {source['destination']}")
+                print(f"🆕 Sheet not found. Creating: {source['destination']}")
                 dest_worksheet = dest_sheet.add_worksheet(title=source["destination"], rows="1000", cols=str(len(headers)))
 
-            # Clear old data
-            print("🧹 Clearing old data...")
+            print(f"🧹 Clearing old data...")
             dest_worksheet.clear()
 
-            # Write new data
-            print(f"📝 Writing {len(df_filtered)} rows...")
+            print(f"✍️ Writing headers and {len(df_filtered)} rows to destination...")
             dest_worksheet.append_row(headers)
             dest_worksheet.append_rows(df_filtered.values.tolist())
 
             print(f"✅ Updated: {source['destination']}")
-            time.sleep(2)  # avoid rate limit
 
     except Exception:
         print("❌ Error while updating destination:")
@@ -147,9 +143,9 @@ def update_destination(client, destination_url, sources):
 
 
 def import_new_joining(client):
-    """Special import for New Joining tab with Column U preservation."""
+    """Special case: Import 'New Joining' tab."""
     try:
-        print("\n📋 Importing New Joining data...")
+        print("\n⚙️ Running special import: New Joining")
         source_spreadsheet_id = "1o6nrw8zgg48q1Qbn01J23M8ePYel9IraqXCcuUPMwlM"
         destination_sheet_name = "New Joining"
 
@@ -162,7 +158,12 @@ def import_new_joining(client):
             return
 
         headers = source_data[0]
-        filtered_rows = [row for row in source_data[1:] if row and row[0].strip().lower() == "delhi ncr"]
+
+        filtered_rows = [
+            row for row in source_data[1:]
+            if len(row) > 0 and row[0].strip().lower() == "delhi ncr"
+        ]
+
         if not filtered_rows:
             print("⚠️ No matching data found (Delhi NCR).")
             return
@@ -183,6 +184,7 @@ def import_new_joining(client):
             new_data.append(row)
 
         destination_sheet.update(f"A1:U{len(new_data)}", new_data)
+
         destination_sheet.format("A1:U1", {
             "backgroundColor": {"red": 0.26, "green": 0.52, "blue": 0.96},
             "textFormat": {"foregroundColor": {"red": 1, "green": 1, "blue": 1}, "bold": True}
@@ -195,15 +197,13 @@ def import_new_joining(client):
         traceback.print_exc()
 
 
-# ===========================
-# 🏁 Main Entry Point
-# ===========================
 def main():
-    print("\n🚀 Script started...")
+    print("🚀 Script started...")
     try:
+        client = gspread.authorize(creds)
         update_destination(client, DEST_SHEET_URL, SOURCES)
         import_new_joining(client)
-        print("\n🎉 Script finished successfully!")
+        print("✅ Script finished successfully.")
     except Exception:
         print("💥 Fatal error during execution:")
         traceback.print_exc()
