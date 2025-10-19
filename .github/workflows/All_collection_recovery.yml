@@ -2,13 +2,21 @@ name: All_collection_recovery
 
 on:
   schedule:
-    - cron: '1 2 * * *'   # 8:05 AM IST
-    - cron: '1 4 * * *'   # 10:05 AM IST
-    - cron: '1 6 * * *'   # 12:05 PM IST
-    - cron: '1 8 * * *'   # 2:05 PM IST
-    - cron: '1 10 * * *'  # 4:05 PM IST
-    - cron: '1 12 * * *'  # 6:05 PM IST
-    - cron: '1 14 * * *'  # 8:05 PM IST
+    # IST 8:05 AM → UTC 2:35 AM
+    - cron: '35 2 * * *'
+    # IST 10:05 AM → UTC 4:35 AM
+    - cron: '35 4 * * *'
+    # IST 12:05 PM → UTC 6:35 AM
+    - cron: '35 6 * * *'
+    # IST 2:05 PM → UTC 8:35 AM
+    - cron: '35 8 * * *'
+    # IST 4:05 PM → UTC 10:35 AM
+    - cron: '35 10 * * *'
+    # IST 6:05 PM → UTC 12:35 PM
+    - cron: '35 12 * * *'
+    # IST 8:05 PM → UTC 14:35 PM
+    - cron: '35 14 * * *'
+
   workflow_dispatch:
 
 jobs:
