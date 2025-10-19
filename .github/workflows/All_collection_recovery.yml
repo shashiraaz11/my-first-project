@@ -29,11 +29,9 @@ jobs:
           pip install --upgrade pip
           pip install gspread pandas google-auth
 
-      - name: Create service account file
-        run: |
-          echo '${{ secrets.ACCOUNT_KEY_JSON }}' > rare-sunrise-446516-u4-897494306ac4.json
-
       - name: Run All_collection_recovery.py
+        env:
+          ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
         run: |
           echo "🚀 Starting All_collection_recovery.py..."
           python All_collection_recovery.py
