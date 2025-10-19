@@ -41,5 +41,5 @@ jobs:
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
         run: |
-          echo "🚀 Starting All_collection_recovery.py..."
+          echo "🚀 All_collection_recovery.py..."
           python All_collection_recovery.py
