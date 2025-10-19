@@ -6,31 +6,40 @@ import os, json
 
 # ===== AUTH SETUP =====
 def get_gsheet_client():
+    """
+    Returns an authorized gspread client.
+    Works both locally (using file) and in GitHub Actions (using environment variable).
+    """
+
     SCOPES = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
 
-    # Option 1: Environment variable (GitHub/Server)
     key_data = os.environ.get("ACCOUNT_KEY_JSON")
-
-    # Option 2: Local file (if running manually)
     SERVICE_ACCOUNT_FILE = r"C:\Users\skuma\Desktop\Python\Account key.json"
 
+    creds = None
+
     if key_data:
+        print("🔐 Using service account from environment variable (GitHub Actions)")
         creds_dict = json.loads(key_data)
         creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+
     elif os.path.exists(SERVICE_ACCOUNT_FILE):
+        print("💾 Using local service account file")
         creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
     else:
         raise FileNotFoundError("❌ Service account credentials not found.")
 
     client = gspread.authorize(creds)
     return client
 
+
 # ===== OS SUMMARY COLLECTION =====
 def ossummarycollection():
-    print("▶️ Running ossummarycollection...")
+    print("\n▶️ Running ossummarycollection...")
 
     source_id = "1D4LjhxfaBpV1zUSCrQ7Xfe2NpeNRNgSdli16lh4anlo"
     target_id = "1sipU5ThP9PmJYBBn06XxGZkPvUNobBCHQWo8jNwUyuw"
@@ -49,6 +58,7 @@ def ossummarycollection():
     headers = data[2]  # Row 3 = headers
     rows = data[3:]    # Row 4 onwards
 
+    # Filter specific city rows
     filtered = [
         row for row in rows
         if len(row) > 1 and str(row[1]).strip().lower() in ["delhi ncr", "sukhrali", "noida", "delhi"]
@@ -56,17 +66,18 @@ def ossummarycollection():
 
     print(f"✅ Filtered rows: {len(filtered)}")
 
+    # Clear & Write data
     target.batch_clear(["A:Q"])
     target.update("A1:Q1", [headers])
-
     if filtered:
         target.update(f"A2:Q{len(filtered)+1}", filtered)
 
     print("✅ OS Collection updated successfully!\n")
 
+
 # ===== RECOVERY UPDATE =====
 def updateRecovery():
-    print("▶️ Running updateRecovery...")
+    print("\n▶️ Running updateRecovery...")
 
     source_id = "1D4LjhxfaBpV1zUSCrQ7Xfe2NpeNRNgSdli16lh4anlo"
     target_id = "1sipU5ThP9PmJYBBn06XxGZkPvUNobBCHQWo8jNwUyuw"
@@ -83,10 +94,10 @@ def updateRecovery():
     revshare_sheet = source.worksheet(revshare_tab)
     recovery_sheet = target.worksheet(target_tab)
 
-    # Clear old data (A:G)
+    # Clear old data
     recovery_sheet.batch_clear(["A:G"])
 
-    # Leasing data
+    # Copy leasing data
     leasing_data = leasing_sheet.get("A:G", value_render_option="UNFORMATTED_VALUE")
     if not leasing_data:
         print("⚠️ No leasing data found.")
@@ -95,7 +106,7 @@ def updateRecovery():
     recovery_sheet.update(f"A1:G{len(leasing_data)}", leasing_data)
     print(f"✅ Leasing data copied ({len(leasing_data)} rows)")
 
-    # Revshare data
+    # Copy revshare data
     rev_data = revshare_sheet.get("A:H", value_render_option="UNFORMATTED_VALUE")
     if not rev_data:
         print("⚠️ No revshare data found.")
@@ -110,20 +121,21 @@ def updateRecovery():
     print(f"✅ Revshare data appended ({len(final_data)} rows)")
     print("🎯 Recovery sheet updated successfully!\n")
 
+
 # ===== CNG OS COLLECTION =====
 def importCNGOSCollectionFast():
-    print("▶️ Running importCNGOSCollectionFast...")
+    print("\n▶️ Running importCNGOSCollectionFast...")
 
     SOURCE_SHEET_ID = "1sipU5ThP9PmJYBBn06XxGZkPvUNobBCHQWo8jNwUyuw"
     SOURCE_TAB = "OS_Collection"
-    TARGET_SHEET_ID = "YOUR_TARGET_SPREADSHEET_ID"  # 🔹 Replace this with your destination sheet ID
+    TARGET_SHEET_ID = "YOUR_TARGET_SPREADSHEET_ID"  # 🔹 Replace this with your target sheet ID
     TARGET_TAB = "CNG_OS_Summary"
 
     client = get_gsheet_client()
     source = client.open_by_key(SOURCE_SHEET_ID).worksheet(SOURCE_TAB)
     target = client.open_by_key(TARGET_SHEET_ID).worksheet(TARGET_TAB)
 
-    # Read filter date
+    # Get date from E1
     filter_date_str = target.acell("E1").value
     if not filter_date_str:
         print("⚠️ No date in E1")
@@ -131,8 +143,12 @@ def importCNGOSCollectionFast():
 
     filter_date = datetime.strptime(filter_date_str, "%d/%m/%Y").replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Get all data from OS_Collection
+    # Read source data
     data = source.get_all_values()
+    if not data:
+        print("⚠️ No source data found.")
+        return
+
     header = data[0]
     rows = data[1:]
 
@@ -158,10 +174,14 @@ def importCNGOSCollectionFast():
 
     print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}\n")
 
-# ===== MAIN =====
+
+# ===== MAIN EXECUTION =====
 if __name__ == "__main__":
-    print("🚀 Starting All_collection_recovery.py...")
-    ossummarycollection()
-    updateRecovery()
-    importCNGOSCollectionFast()
-    print("✅ All tasks completed successfully!")
+    print("🚀 All_collection_recovery.py...")
+    try:
+        ossummarycollection()
+        updateRecovery()
+        importCNGOSCollectionFast()
+        print("✅ All tasks completed successfully!")
+    except Exception as e:
+        print(f"❌ Error occurred: {e}")
