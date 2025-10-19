@@ -105,11 +105,16 @@ def importCNGOSCollectionFast(client):
         return
 
     print(f"🕒 Filter date from E1: {filter_date_str}")
-    filter_date = pd.to_datetime(filter_date_str).normalize()
+    
+    try:
+        filter_date = pd.to_datetime(filter_date_str).normalize()
+    except Exception as e:
+        print(f"❌ Invalid date in E1: {e}")
+        return
 
     data = source.get_all_values()
     header = data[0]
-    filtered = [header]
+    filtered = [header]  # include header
 
     for i, row in enumerate(data[1:], start=2):
         try:
@@ -120,32 +125,12 @@ def importCNGOSCollectionFast(client):
                         row[3], row[0], row[1], row[2], row[5], row[4], row[10], row[16], row[17]
                     ])
         except Exception as e:
-            continue  # skip invalid rows silently
+            print(f"⚠️ Row {i} skipped due to error: {e}")
+            continue
 
     if len(filtered) == 1:
         print("⚠️ No matching data found")
     else:
         target.batch_clear(["E2:M"])
         target.update(values=filtered, range_name=f"E2:M{len(filtered)+1}")
-
-    print(f"✅ importCNGOSCollectionFast completed. Rows: {len(filtered)-1}\n")
-
-
-# ---------------- MAIN ----------------
-if __name__ == "__main__":
-    print("🚀 Starting All_collection_recovery.py...")
-
-    try:
-        ossummarycollection()
-    except Exception as e:
-        print(f"❌ ossummarycollection failed: {e}")
-
-    try:
-        updateRecovery()
-    except Exception as e:
-        print(f"❌ updateRecovery failed: {e}")
-
-    try:
-        importCNGOSCollectionFast(client)
-    except Exception as e:
-        print(f"❌ importCNGOSCollectionFast failed: {e}")
+        print(f"✅ importCNGOSCollectionFast completed. Rows: {len(filtered)-1}\n")
