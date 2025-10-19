@@ -122,7 +122,7 @@ def updateRecovery():
     print("🎯 Recovery sheet updated successfully!\n")
 
 
-# ===== CNG OS COLLECTION =====
+# ===== CNG OS COLLECTION (3rd function) =====
 def importCNGOSCollectionFast():
     print("\n▶️ Running importCNGOSCollectionFast...")
 
@@ -153,8 +153,9 @@ def importCNGOSCollectionFast():
     header = data[0]  # first row
     output = [header]  # start output with header
 
+    # Process rows
     for r in data[1:]:
-        r = r + [""] * 18  # pad row
+        r = r + [""] * 18  # pad row to avoid IndexError
         try:
             if not r[0]:
                 continue
@@ -169,7 +170,7 @@ def importCNGOSCollectionFast():
         print("⚠️ No matching data found.")
         return
 
-    # Clear old data except header row
+    # Clear old data except header
     last_row = len(target.get_all_values())
     target.batch_clear([f"E2:M{last_row}"])
 
@@ -178,3 +179,15 @@ def importCNGOSCollectionFast():
     target.update("E2", output[1:])        # data rows
 
     print(f"✅ importCNGOSCollectionFast completed. Rows (excluding header): {len(output)-1}")
+
+
+# ===== MAIN EXECUTION =====
+if __name__ == "__main__":
+    print("🚀 All_collection_recovery.py...")
+    try:
+        ossummarycollection()
+        updateRecovery()
+        importCNGOSCollectionFast()
+        print("✅ All tasks completed successfully!")
+    except Exception as e:
+        print(f"❌ Error occurred: {e}")
