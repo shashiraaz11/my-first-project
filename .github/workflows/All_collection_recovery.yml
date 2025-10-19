@@ -1,4 +1,4 @@
-name: All_collection_recovery.py
+name: All_collection_recovery
 
 on:
   push:
