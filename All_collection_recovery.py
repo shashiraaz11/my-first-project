@@ -11,6 +11,17 @@ creds = Credentials.from_service_account_file(
 )
 client = gspread.authorize(creds)
 
+
+# ---------------- HELPER FUNCTION ----------------
+def col_number_to_letter(n):
+    """Convert column number (1-based) to Excel-style letter (e.g., 1 -> A, 27 -> AA)"""
+    result = ""
+    while n > 0:
+        n, rem = divmod(n - 1, 26)
+        result = chr(65 + rem) + result
+    return result
+
+
 # ---------------- OS SUMMARY COLLECTION ----------------
 def ossummarycollection():
     print("▶️ Running ossummarycollection...")
@@ -29,13 +40,16 @@ def ossummarycollection():
     filtered = [row for row in data if row[1] in ["Delhi NCR", "Sukhrali", "Noida", "Delhi"]]
 
     target.clear()
-    target.update(values=[headers], range_name="A1:Q1")
+
+    last_col = col_number_to_letter(len(headers))
+    target.update(values=[headers], range_name=f"A1:{last_col}1")
 
     if filtered:
-        target.update(values=filtered, range_name=f"A2:Q{len(filtered)+1}")
+        target.update(values=filtered, range_name=f"A2:{last_col}{len(filtered)+1}")
 
     print(f"✅ Filtered rows: {len(filtered)}")
     print("✅ OS Collection updated successfully!\n")
+
 
 # ---------------- RECOVERY DATA UPDATE ----------------
 def updateRecovery():
@@ -71,6 +85,7 @@ def updateRecovery():
     print(f"✅ Revshare data appended ({len(final_data)} rows)")
     print("🎯 Recovery sheet updated successfully!\n")
 
+
 # ---------------- CNG OS COLLECTION FAST ----------------
 def importCNGOSCollectionFast(client):
     print("▶️ Running importCNGOSCollectionFast...")
@@ -89,6 +104,7 @@ def importCNGOSCollectionFast(client):
         print("⚠️ No date found in E1")
         return
 
+    print(f"🕒 Filter date from E1: {filter_date_str}")
     filter_date = pd.to_datetime(filter_date_str).normalize()
 
     data = source.get_all_values()
@@ -100,9 +116,11 @@ def importCNGOSCollectionFast(client):
             if row[0]:
                 date_val = pd.to_datetime(row[0]).normalize()
                 if date_val == filter_date and row[1] != "Delhi NCR":
-                    filtered.append([row[3], row[0], row[1], row[2], row[5], row[4], row[10], row[16], row[17]])
-        except Exception:
-            continue
+                    filtered.append([
+                        row[3], row[0], row[1], row[2], row[5], row[4], row[10], row[16], row[17]
+                    ])
+        except Exception as e:
+            continue  # skip invalid rows silently
 
     if len(filtered) == 1:
         print("⚠️ No matching data found")
@@ -112,9 +130,22 @@ def importCNGOSCollectionFast(client):
 
     print(f"✅ importCNGOSCollectionFast completed. Rows: {len(filtered)-1}\n")
 
+
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
     print("🚀 Starting All_collection_recovery.py...")
-    ossummarycollection()
-    updateRecovery()
-    importCNGOSCollectionFast(client)
+
+    try:
+        ossummarycollection()
+    except Exception as e:
+        print(f"❌ ossummarycollection failed: {e}")
+
+    try:
+        updateRecovery()
+    except Exception as e:
+        print(f"❌ updateRecovery failed: {e}")
+
+    try:
+        importCNGOSCollectionFast(client)
+    except Exception as e:
+        print(f"❌ importCNGOSCollectionFast failed: {e}")
