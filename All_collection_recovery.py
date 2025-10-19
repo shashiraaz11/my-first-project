@@ -10,7 +10,6 @@ def get_gsheet_client():
     Returns an authorized gspread client.
     Works both locally (file) and in GitHub Actions (env variable).
     """
-
     SCOPES = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
@@ -149,36 +148,36 @@ def importCNGOSCollectionFast():
         print("⚠️ No source data found.")
         return
 
-    # --- Keep header ---
-    header = data[0]  # first row
-    output = [header]  # start output with header
-
-    # Process rows
+    # --- Filter rows ---
+    filtered_rows = []
     for r in data[1:]:
-        r = r + [""] * 18  # pad row to avoid IndexError
+        r = r + [""] * 18  # pad row
         try:
             if not r[0]:
                 continue
             row_date = datetime.strptime(r[0], "%d/%m/%Y").date()
             if row_date == filter_date and r[1].strip() != "Delhi NCR":
                 mapped = [r[3], r[0], r[1], r[2], r[5], r[4], r[10], r[16], r[17]]
-                output.append(mapped)
+                filtered_rows.append(mapped)
         except Exception as e:
             print(f"⚠️ Skipping row due to error: {e}")
 
-    if len(output) == 1:
+    if not filtered_rows:
         print("⚠️ No matching data found.")
         return
+
+    # --- Use header from filtered rows only ---
+    header = ["Car No", "Date", "City", "Driver Name", "Amount 1", "Amount 2", "Col 11", "Col 17", "Col 18"]
 
     # Clear old data except header
     last_row = len(target.get_all_values())
     target.batch_clear([f"E2:M{last_row}"])
 
     # Write header + filtered rows
-    target.update("E1", [output[0]])       # header
-    target.update("E2", output[1:])        # data rows
+    target.update("E2", [header])       # filtered header
+    target.update("E3", filtered_rows)  # filtered data
 
-    print(f"✅ importCNGOSCollectionFast completed. Rows (excluding header): {len(output)-1}")
+    print(f"✅ importCNGOSCollectionFast completed. Rows (excluding header): {len(filtered_rows)}")
 
 
 # ===== MAIN EXECUTION =====
