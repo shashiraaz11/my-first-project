@@ -1,7 +1,6 @@
 name: All_collection_recovery
 
 on:
-  push:
   schedule:
     - cron: '31 2 * * *'   # 8:01 AM IST
     - cron: '31 4 * * *'   # 10:01 AM IST
@@ -9,7 +8,6 @@ on:
     - cron: '31 8 * * *'   # 2:01 PM IST
     - cron: '31 10 * * *'  # 4:01 PM IST
     - cron: '31 12 * * *'  # 6:01 PM IST
-    - cron: '31 14 * * *'  # 8:01 PM IST
   workflow_dispatch:
 
 jobs:
@@ -28,12 +26,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install gspread google-auth
+          pip install pandas gspread google-auth google-auth-oauthlib google-auth-httplib2
 
-      - name: Run All_collection_recovery.py Script
+      - name: Run All_collection_recovery.py
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
         run: |
           echo "🚀 Starting All_collection_recovery.py..."
           python All_collection_recovery.py
-          echo "✅ Job completed successfully!"
