@@ -1,23 +1,31 @@
 name: All_collection_recovery
 
 on:
+  # Scheduled runs (UTC)
   schedule:
-    # IST 8:05 AM → UTC 2:35 AM
-    - cron: '35 2 * * *'
-    # IST 10:05 AM → UTC 4:35 AM
-    - cron: '35 4 * * *'
-    # IST 12:05 PM → UTC 6:35 AM
-    - cron: '35 6 * * *'
-    # IST 2:05 PM → UTC 8:35 AM
-    - cron: '35 8 * * *'
-    # IST 4:05 PM → UTC 10:35 AM
-    - cron: '35 10 * * *'
-    # IST 6:05 PM → UTC 12:35 PM
-    - cron: '35 12 * * *'
-    # IST 8:05 PM → UTC 14:35 PM
-    - cron: '35 14 * * *'
+    - cron: '35 2 * * *'   # 8:05 AM IST
+    - cron: '35 4 * * *'   # 10:05 AM IST
+    - cron: '35 6 * * *'   # 12:05 PM IST
+    - cron: '35 8 * * *'   # 2:05 PM IST
+    - cron: '35 10 * * *'  # 4:05 PM IST
+    - cron: '35 12 * * *'  # 6:05 PM IST
+    - cron: '35 14 * * *'  # 8:05 PM IST
 
+  # Manual trigger
   workflow_dispatch:
+    inputs:
+      run_ossummary:
+        description: 'Run OS Summary Collection?'
+        required: false
+        default: 'true'
+      run_recovery:
+        description: 'Run Recovery Update?'
+        required: false
+        default: 'true'
+      run_cngos:
+        description: 'Run CNG OS Collection?'
+        required: false
+        default: 'true'
 
 jobs:
   run-All_collection_recovery:
@@ -40,6 +48,9 @@ jobs:
       - name: Run All_collection_recovery.py
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
+          RUN_OSSUMMARY: ${{ github.event.inputs.run_ossummary }}
+          RUN_RECOVERY: ${{ github.event.inputs.run_recovery }}
+          RUN_CNGOS: ${{ github.event.inputs.run_cngos }}
         run: |
-          echo "🚀 All_collection_recovery.py..."
+          echo "🚀 Running All_collection_recovery.py..."
           python All_collection_recovery.py
