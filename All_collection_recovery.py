@@ -1,28 +1,34 @@
 import gspread
-from google.oauth2.service_account import Credentials
 import pandas as pd
+from google.oauth2.service_account import Credentials
+from datetime import datetime
+import os, json
 
-# ------------- AUTH SETUP -----------------
-SERVICE_ACCOUNT_FILE = "rare-sunrise-446516-u4-897494306ac4.json"
+# ===== AUTH SETUP =====
+def get_gsheet_client():
+    SCOPES = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
 
-creds = Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE,
-    scopes=["https://www.googleapis.com/auth/spreadsheets"]
-)
-client = gspread.authorize(creds)
+    # Option 1: Environment variable (GitHub/Server)
+    key_data = os.environ.get("ACCOUNT_KEY_JSON")
 
+    # Option 2: Local file (if running manually)
+    SERVICE_ACCOUNT_FILE = r"C:\Users\skuma\Desktop\Python\Account key.json"
 
-# ------------- HELPER: Column Index to Letter -----------------
-def col_number_to_letter(n):
-    """Convert column number (1-based) to letter (e.g. 1 -> A, 27 -> AA)"""
-    result = ""
-    while n > 0:
-        n, rem = divmod(n - 1, 26)
-        result = chr(65 + rem) + result
-    return result
+    if key_data:
+        creds_dict = json.loads(key_data)
+        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    elif os.path.exists(SERVICE_ACCOUNT_FILE):
+        creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    else:
+        raise FileNotFoundError("❌ Service account credentials not found.")
 
+    client = gspread.authorize(creds)
+    return client
 
-# ------------- FUNCTION 1: OS Summary Collection -----------------
+# ===== OS SUMMARY COLLECTION =====
 def ossummarycollection():
     print("▶️ Running ossummarycollection...")
 
@@ -31,34 +37,34 @@ def ossummarycollection():
     source_tab = "OS_ETM_Summary"
     target_tab = "OS_Collection"
 
-    source_ws = client.open_by_key(source_id).worksheet(source_tab)
-    target_ws = client.open_by_key(target_id).worksheet(target_tab)
+    client = get_gsheet_client()
+    source = client.open_by_key(source_id).worksheet(source_tab)
+    target = client.open_by_key(target_id).worksheet(target_tab)
 
-    all_data = source_ws.get_all_values()
-    if len(all_data) < 3:
-        print("⚠️ Not enough rows in source.")
+    data = source.get("A:Q", value_render_option="UNFORMATTED_VALUE")
+    if len(data) <= 2:
+        print("⚠️ No data found to copy.")
         return
 
-    headers = all_data[2]  # A3:Q3
-    data = all_data[3:]    # A4 onwards
+    headers = data[2]  # Row 3 = headers
+    rows = data[3:]    # Row 4 onwards
 
-    # Filter B == one of target cities
-    filtered = [row for row in data if row[1] in ['Delhi NCR', 'Sukhrali', 'Noida', 'Delhi']]
+    filtered = [
+        row for row in rows
+        if len(row) > 1 and str(row[1]).strip().lower() in ["delhi ncr", "sukhrali", "noida", "delhi"]
+    ]
 
-    # Clear only A:Q
-    target_ws.batch_clear(["A:Q"])
+    print(f"✅ Filtered rows: {len(filtered)}")
 
-    # Update header and data
-    last_col_letter = col_number_to_letter(len(headers))
-    target_ws.update(f"A1:{last_col_letter}1", [headers])
+    target.batch_clear(["A:Q"])
+    target.update("A1:Q1", [headers])
 
     if filtered:
-        target_ws.update(f"A2:{last_col_letter}{len(filtered)+1}", filtered)
+        target.update(f"A2:Q{len(filtered)+1}", filtered)
 
-    print(f"✅ OS Collection updated with {len(filtered)} rows.")
+    print("✅ OS Collection updated successfully!\n")
 
-
-# ------------- FUNCTION 2: updateRecovery -----------------
+# ===== RECOVERY UPDATE =====
 def updateRecovery():
     print("▶️ Running updateRecovery...")
 
@@ -69,94 +75,93 @@ def updateRecovery():
     revshare_tab = "Revshare_Raw"
     target_tab = "Recovery"
 
+    client = get_gsheet_client()
     source = client.open_by_key(source_id)
     target = client.open_by_key(target_id)
 
-    leasing_ws = source.worksheet(leasing_tab)
-    revshare_ws = source.worksheet(revshare_tab)
-    target_ws = target.worksheet(target_tab)
+    leasing_sheet = source.worksheet(leasing_tab)
+    revshare_sheet = source.worksheet(revshare_tab)
+    recovery_sheet = target.worksheet(target_tab)
 
-    # Clear A:G in target
-    target_ws.batch_clear(["A:G"])
+    # Clear old data (A:G)
+    recovery_sheet.batch_clear(["A:G"])
 
-    # Part 1: Leasing
-    leasing_data = leasing_ws.get_all_values()
-    leasing_data = [row[:7] for row in leasing_data]  # First 7 columns
-    target_ws.update(f"A1:G{len(leasing_data)}", leasing_data)
+    # Leasing data
+    leasing_data = leasing_sheet.get("A:G", value_render_option="UNFORMATTED_VALUE")
+    if not leasing_data:
+        print("⚠️ No leasing data found.")
+        return
 
-    # Part 2: Revshare
-    rev_data = revshare_ws.get_all_values()
+    recovery_sheet.update(f"A1:G{len(leasing_data)}", leasing_data)
+    print(f"✅ Leasing data copied ({len(leasing_data)} rows)")
+
+    # Revshare data
+    rev_data = revshare_sheet.get("A:H", value_render_option="UNFORMATTED_VALUE")
+    if not rev_data:
+        print("⚠️ No revshare data found.")
+        return
+
     filtered = [row for i, row in enumerate(rev_data) if i == 0 or row[0] != ""]
     final_data = [[r[0], r[1], r[3], r[4], r[5], r[6], r[7]] for r in filtered]
 
     start_row = len(leasing_data) + 3
-    target_ws.update(f"A{start_row}:G{start_row + len(final_data) - 1}", final_data)
+    recovery_sheet.update(f"A{start_row}:G{start_row + len(final_data) - 1}", final_data)
 
-    print(f"✅ Recovery sheet updated: Leasing({len(leasing_data)}), Revshare({len(final_data)})")
+    print(f"✅ Revshare data appended ({len(final_data)} rows)")
+    print("🎯 Recovery sheet updated successfully!\n")
 
-
-# ------------- FUNCTION 3: importCNGOSCollectionFast -----------------
+# ===== CNG OS COLLECTION =====
 def importCNGOSCollectionFast():
     print("▶️ Running importCNGOSCollectionFast...")
 
-    target_id = "1D4LjhxfaBpV1zUSCrQ7Xfe2NpeNRNgSdli16lh4anlo"
-    source_id = "1sipU5ThP9PmJYBBn06XxGZkPvUNobBCHQWo8jNwUyuw"
+    SOURCE_SHEET_ID = "1sipU5ThP9PmJYBBn06XxGZkPvUNobBCHQWo8jNwUyuw"
+    SOURCE_TAB = "OS_Collection"
+    TARGET_SHEET_ID = "YOUR_TARGET_SPREADSHEET_ID"  # 🔹 Replace this with your destination sheet ID
+    TARGET_TAB = "CNG_OS_Summary"
 
-    target_tab = "CNG_OS_Summary"
-    source_tab = "OS_Collection"
+    client = get_gsheet_client()
+    source = client.open_by_key(SOURCE_SHEET_ID).worksheet(SOURCE_TAB)
+    target = client.open_by_key(TARGET_SHEET_ID).worksheet(TARGET_TAB)
 
-    target_ws = client.open_by_key(target_id).worksheet(target_tab)
-    source_ws = client.open_by_key(source_id).worksheet(source_tab)
-
-    filter_date_str = target_ws.acell("E1").value
+    # Read filter date
+    filter_date_str = target.acell("E1").value
     if not filter_date_str:
         print("⚠️ No date in E1")
         return
 
-    try:
-        filter_date = pd.to_datetime(filter_date_str).normalize()
-    except Exception as e:
-        print(f"❌ Invalid date in E1: {e}")
-        return
+    filter_date = datetime.strptime(filter_date_str, "%d/%m/%Y").replace(hour=0, minute=0, second=0, microsecond=0)
 
-    data = source_ws.get_all_values()
-    if not data:
-        print("⚠️ No data in OS_Collection")
-        return
+    # Get all data from OS_Collection
+    data = source.get_all_values()
+    header = data[0]
+    rows = data[1:]
 
-    filtered = []
-    for i, row in enumerate(data[1:], start=2):
+    output = []
+    for r in rows:
         try:
-            if row[0] and pd.to_datetime(row[0]).normalize() == filter_date and row[1] != "Delhi NCR":
-                filtered.append([row[3], row[0], row[1], row[2], row[5], row[4], row[10], row[16], row[17]])
-        except:
+            if not r or not r[0]:
+                continue
+            row_date = datetime.strptime(r[0], "%d/%m/%Y").replace(hour=0, minute=0, second=0, microsecond=0)
+            if row_date == filter_date and r[1] != "Delhi NCR":
+                mapped = [r[3], r[0], r[1], r[2], r[5], r[4], r[10], r[16], r[17]]
+                output.append(mapped)
+        except Exception:
             continue
 
-    # Clear E2:M (9 columns)
-    target_ws.batch_clear(["E2:M"])
+    if not output:
+        print("⚠️ No matching data found.")
+        return
 
-    if filtered:
-        target_ws.update(f"E2:M{len(filtered)+1}", filtered)
-        print(f"✅ importCNGOSCollectionFast: {len(filtered)} rows added.")
-    else:
-        print("⚠️ No matching data found for importCNGOSCollectionFast")
+    last_row = len(target.get_all_values())
+    target.batch_clear([f"E2:M{last_row}"])
+    target.update("E2", output)
 
+    print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}\n")
 
-# ------------- MAIN -----------------
+# ===== MAIN =====
 if __name__ == "__main__":
-    print("All_collection_recovery.py...")
-
-    try:
-        ossummarycollection()
-    except Exception as e:
-        print(f"❌ Error in ossummarycollection: {e}")
-
-    try:
-        updateRecovery()
-    except Exception as e:
-        print(f"❌ Error in updateRecovery: {e}")
-
-    try:
-        importCNGOSCollectionFast()
-    except Exception as e:
-        print(f"❌ Error in importCNGOSCollectionFast: {e}")
+    print("🚀 Starting All_collection_recovery.py...")
+    ossummarycollection()
+    updateRecovery()
+    importCNGOSCollectionFast()
+    print("✅ All tasks completed successfully!")
