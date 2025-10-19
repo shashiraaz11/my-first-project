@@ -8,7 +8,7 @@ import os, json
 def get_gsheet_client():
     """
     Returns an authorized gspread client.
-    Works both locally (using file) and in GitHub Actions (using environment variable).
+    Works both locally (file) and in GitHub Actions (env variable).
     """
 
     SCOPES = [
@@ -128,41 +128,38 @@ def importCNGOSCollectionFast():
 
     SOURCE_SHEET_ID = "1sipU5ThP9PmJYBBn06XxGZkPvUNobBCHQWo8jNwUyuw"
     SOURCE_TAB = "OS_Collection"
-    TARGET_SHEET_ID = "YOUR_TARGET_SPREADSHEET_ID"  # 🔹 Replace this with your target sheet ID
+    TARGET_SHEET_ID = "1HMlQzPbqpEh2OiIZT6h5UxjfY-wmWUrLQDgahNsxzl0"
     TARGET_TAB = "CNG_OS_Summary"
 
     client = get_gsheet_client()
     source = client.open_by_key(SOURCE_SHEET_ID).worksheet(SOURCE_TAB)
     target = client.open_by_key(TARGET_SHEET_ID).worksheet(TARGET_TAB)
 
-    # Get date from E1
+    # Get filter date
     filter_date_str = target.acell("E1").value
     if not filter_date_str:
         print("⚠️ No date in E1")
         return
 
-    filter_date = datetime.strptime(filter_date_str, "%d/%m/%Y").replace(hour=0, minute=0, second=0, microsecond=0)
+    filter_date = datetime.strptime(filter_date_str, "%d/%m/%Y").date()
 
-    # Read source data
     data = source.get_all_values()
     if not data:
         print("⚠️ No source data found.")
         return
 
-    header = data[0]
-    rows = data[1:]
-
     output = []
-    for r in rows:
+    for r in data[1:]:
+        r = r + [""] * 18  # pad row to avoid IndexError
         try:
-            if not r or not r[0]:
+            if not r[0]:
                 continue
-            row_date = datetime.strptime(r[0], "%d/%m/%Y").replace(hour=0, minute=0, second=0, microsecond=0)
-            if row_date == filter_date and r[1] != "Delhi NCR":
+            row_date = datetime.strptime(r[0], "%d/%m/%Y").date()
+            if row_date == filter_date and r[1].strip() != "Delhi NCR":
                 mapped = [r[3], r[0], r[1], r[2], r[5], r[4], r[10], r[16], r[17]]
                 output.append(mapped)
-        except Exception:
-            continue
+        except Exception as e:
+            print(f"⚠️ Skipping row due to error: {e}")
 
     if not output:
         print("⚠️ No matching data found.")
@@ -172,12 +169,12 @@ def importCNGOSCollectionFast():
     target.batch_clear([f"E2:M{last_row}"])
     target.update("E2", output)
 
-    print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}\n")
+    print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}")
 
 
 # ===== MAIN EXECUTION =====
 if __name__ == "__main__":
-    print("🚀 All_collection_recovery.py...")
+    print("🚀All_collection_recovery.py...")
     try:
         ossummarycollection()
         updateRecovery()
