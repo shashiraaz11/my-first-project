@@ -143,14 +143,18 @@ def importCNGOSCollectionFast():
 
     filter_date = datetime.strptime(filter_date_str, "%d/%m/%Y").date()
 
+    # Read source data
     data = source.get_all_values()
     if not data:
         print("⚠️ No source data found.")
         return
 
-    output = []
+    # --- Keep header ---
+    header = data[0]  # first row
+    output = [header]  # start output with header
+
     for r in data[1:]:
-        r = r + [""] * 18  # pad row to avoid IndexError
+        r = r + [""] * 18  # pad row
         try:
             if not r[0]:
                 continue
@@ -161,24 +165,16 @@ def importCNGOSCollectionFast():
         except Exception as e:
             print(f"⚠️ Skipping row due to error: {e}")
 
-    if not output:
+    if len(output) == 1:
         print("⚠️ No matching data found.")
         return
 
+    # Clear old data except header row
     last_row = len(target.get_all_values())
     target.batch_clear([f"E2:M{last_row}"])
-    target.update("E2", output)
 
-    print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}")
+    # Write header + filtered rows
+    target.update("E1", [output[0]])       # header
+    target.update("E2", output[1:])        # data rows
 
-
-# ===== MAIN EXECUTION =====
-if __name__ == "__main__":
-    print("🚀All_collection_recovery.py...")
-    try:
-        ossummarycollection()
-        updateRecovery()
-        importCNGOSCollectionFast()
-        print("✅ All tasks completed successfully!")
-    except Exception as e:
-        print(f"❌ Error occurred: {e}")
+    print(f"✅ importCNGOSCollectionFast completed. Rows (excluding header): {len(output)-1}")
