@@ -186,7 +186,7 @@ def importCNGOSCollectionFast():
                         r[5],
                         to_number(r[4]),
                         to_number(r[10]),
-                        to_percent(r[16]),  # ✅ percentage conversion
+                        r[16],               # 👈 keep as-is (already percentage)
                         to_number(r[17])
                     ]
                     output.append(mapped)
