@@ -170,10 +170,10 @@ def importCNGOSCollectionFast():
                         r[0],
                         r[1],
                         r[2],
-                        to_number(r[5]),
+                        r[5],
                         to_number(r[4]),
                         to_number(r[10]),
-                        to_number(r[16]),
+                        to_percent(r[16]),
                         to_number(r[17])
                     ]
                     output.append(mapped)
