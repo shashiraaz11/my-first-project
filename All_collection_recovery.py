@@ -149,13 +149,26 @@ def importCNGOSCollectionFast():
             print("⚠️ No source data found.")
             return
 
-        # helper function to safely convert to number
+        # helper functions
         def to_number(value):
             try:
                 value = str(value).replace(",", "").strip()
                 return float(value)
             except:
-                return ""  # or return 0 if you prefer 0 instead of blank
+                return ""  # blank if invalid
+
+        def to_percent(value):
+            """Convert to percent (e.g., 0.12 → 12.0 or 12% → 12.0)"""
+            try:
+                val = str(value).replace("%", "").replace(",", "").strip()
+                if val == "":
+                    return ""
+                val = float(val)
+                if val < 1:
+                    val *= 100
+                return round(val, 2)
+            except:
+                return ""
 
         output = []
         for r in data[1:]:
@@ -173,7 +186,7 @@ def importCNGOSCollectionFast():
                         r[5],
                         to_number(r[4]),
                         to_number(r[10]),
-                        to_percent(r[16]),
+                        to_percent(r[16]),  # ✅ percentage conversion
                         to_number(r[17])
                     ]
                     output.append(mapped)
