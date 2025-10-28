@@ -149,6 +149,14 @@ def importCNGOSCollectionFast():
             print("⚠️ No source data found.")
             return
 
+        # helper function to safely convert to number
+        def to_number(value):
+            try:
+                value = str(value).replace(",", "").strip()
+                return float(value)
+            except:
+                return ""  # or return 0 if you prefer 0 instead of blank
+
         output = []
         for r in data[1:]:
             r = r + [""] * 18
@@ -157,7 +165,17 @@ def importCNGOSCollectionFast():
                     continue
                 row_date = datetime.strptime(r[0], "%d/%m/%Y").date()
                 if row_date == filter_date and r[1].strip() != "Delhi NCR":
-                    mapped = [r[3], r[0], r[1], r[2], r[5], r[4], r[10], r[16], r[17]]
+                    mapped = [
+                        r[3],
+                        r[0],
+                        r[1],
+                        r[2],
+                        to_number(r[5]),
+                        to_number(r[4]),
+                        to_number(r[10]),
+                        to_number(r[16]),
+                        to_number(r[17])
+                    ]
                     output.append(mapped)
             except Exception as e:
                 print(f"⚠️ Skipping row due to error: {e}")
@@ -171,6 +189,7 @@ def importCNGOSCollectionFast():
         target.update("E3", output)
 
         print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}")
+
     except Exception as e:
         print(f"❌ importCNGOSCollectionFast failed: {e}")
 
