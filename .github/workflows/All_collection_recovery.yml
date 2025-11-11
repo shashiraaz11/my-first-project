@@ -1,3 +1,5 @@
+name: All_collection_recovery
+
 on:
   schedule:
     - cron: '31 2 * * *'   # 8:01 AM IST 
