@@ -1,17 +1,13 @@
-name: All_collection_recovery
-
 on:
-  # Scheduled runs (UTC)
   schedule:
-    - cron: '35 2 * * *'   # 8:01 AM IST
-    - cron: '35 4 * * *'   # 10:01 AM IST
-    - cron: '35 6 * * *'   # 12:01 PM IST
-    - cron: '35 8 * * *'   # 2:01 PM IST
-    - cron: '35 10 * * *'  # 4:01 PM IST
-    - cron: '35 12 * * *'  # 6:01 PM IST
-    - cron: '35 14 * * *'  # 8:01 PM IST
+    - cron: '31 2 * * *'   # 8:01 AM IST 
+    - cron: '31 4 * * *'   # 10:01 AM IST 
+    - cron: '31 6 * * *'   # 12:01 PM IST 
+    - cron: '31 8 * * *'   # 2:01 PM IST 
+    - cron: '31 10 * * *'  # 4:01 PM IST 
+    - cron: '31 12 * * *'  # 6:01 PM IST 
+    - cron: '31 14 * * *'  # 8:01 PM IST
 
-  # Manual trigger
   workflow_dispatch:
     inputs:
       run_ossummary:
@@ -26,31 +22,3 @@ on:
         description: 'Run CNG OS Collection?'
         required: false
         default: 'true'
-
-jobs:
-  run-All_collection_recovery:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install gspread pandas google-auth
-
-      - name: Run All_collection_recovery.py
-        env:
-          ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
-          RUN_OSSUMMARY: ${{ github.event.inputs.run_ossummary }}
-          RUN_RECOVERY: ${{ github.event.inputs.run_recovery }}
-          RUN_CNGOS: ${{ github.event.inputs.run_cngos }}
-        run: |
-          echo "🚀 Running All_collection_recovery.py..."
-          python All_collection_recovery.py
