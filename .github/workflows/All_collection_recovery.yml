@@ -1,0 +1,27 @@
+Name: All_collection_recovery
+
+
+on:
+  schedule:
+    - cron: '31 2 * * *'   # 8:01 AM IST 
+    - cron: '31 4 * * *'   # 10:01 AM IST 
+    - cron: '31 6 * * *'   # 12:01 PM IST 
+    - cron: '31 8 * * *'   # 2:01 PM IST 
+    - cron: '31 10 * * *'  # 4:01 PM IST 
+    - cron: '31 12 * * *'  # 6:01 PM IST 
+    - cron: '31 14 * * *'  # 8:01 PM IST
+
+  workflow_dispatch:
+    inputs:
+      run_ossummary:
+        description: 'Run OS Summary Collection?'
+        required: false
+        default: 'true'
+      run_recovery:
+        description: 'Run Recovery Update?'
+        required: false
+        default: 'true'
+      run_cngos:
+        description: 'Run CNG OS Collection?'
+        required: false
+        default: 'true'
