@@ -4,6 +4,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import os, json
 
+
 # ===== AUTH SETUP =====
 def get_gsheet_client():
     """
@@ -149,45 +150,32 @@ def importCNGOSCollectionFast():
             print("⚠️ No source data found.")
             return
 
-        # helper functions
+        # helper function
         def to_number(value):
             try:
                 value = str(value).replace(",", "").strip()
-                return float(value)
-            except:
-                return ""  # blank if invalid
-
-        def to_percent(value):
-            """Convert to percent (e.g., 0.12 → 12.0 or 12% → 12.0)"""
-            try:
-                val = str(value).replace("%", "").replace(",", "").strip()
-                if val == "":
-                    return ""
-                val = float(val)
-                if val < 1:
-                    val *= 100
-                return round(val, 2)
+                return round(float(value), 2)
             except:
                 return ""
 
         output = []
         for r in data[1:]:
-            r = r + [""] * 18
+            r = r + [""] * 20  # padding for missing cols
             try:
                 if not r[0]:
                     continue
                 row_date = datetime.strptime(r[0], "%d/%m/%Y").date()
                 if row_date == filter_date and r[1].strip() != "Delhi NCR":
                     mapped = [
-                        r[3],
-                        r[0],
-                        r[1],
-                        r[2],
-                        r[5],
+                        r[3],                # Column E
+                        r[0],                # Date
+                        r[1],                # Location
+                        r[2],                # Something else
+                        r[5],                # Name
                         to_number(r[4]),
                         to_number(r[10]),
-                        r[16],               # 👈 keep as-is (already percentage)
-                        to_number(r[17])
+                        to_number(r[17]),
+                        to_number(r[18])
                     ]
                     output.append(mapped)
             except Exception as e:
