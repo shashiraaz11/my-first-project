@@ -3,13 +3,13 @@ name: All_collection_recovery
 on:
   # Scheduled runs (UTC)
   schedule:
-    - cron: '35 2 * * *'   # 8:05 AM IST
-    - cron: '35 4 * * *'   # 10:05 AM IST
-    - cron: '35 6 * * *'   # 12:05 PM IST
-    - cron: '35 8 * * *'   # 2:05 PM IST
-    - cron: '35 10 * * *'  # 4:05 PM IST
-    - cron: '35 12 * * *'  # 6:05 PM IST
-    - cron: '35 14 * * *'  # 8:05 PM IST
+    - cron: '35 2 * * *'   # 8:01 AM IST
+    - cron: '35 4 * * *'   # 10:01 AM IST
+    - cron: '35 6 * * *'   # 12:01 PM IST
+    - cron: '35 8 * * *'   # 2:01 PM IST
+    - cron: '35 10 * * *'  # 4:01 PM IST
+    - cron: '35 12 * * *'  # 6:01 PM IST
+    - cron: '35 14 * * *'  # 8:01 PM IST
 
   # Manual trigger
   workflow_dispatch:
