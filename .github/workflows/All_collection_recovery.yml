@@ -2,13 +2,14 @@ name: All_collection_recovery
 
 on:
   schedule:
-    - cron: '25 2 * * *'   # ~8:00 AM IST
-    - cron: '25 4 * * *'   # ~10:00 AM IST
-    - cron: '25 6 * * *'   # ~12:00 PM IST
-    - cron: '25 8 * * *'   # ~2:00 PM IST
-    - cron: '25 10 * * *'  # ~4:00 PM IST
-    - cron: '25 12 * * *'  # ~6:00 PM IST
-    - cron: '25 14 * * *'  # ~8:00 PM IST
+    # Start 10 minutes before target time (so data runs right on time)
+    - cron: '20 2 * * *'   # ~8:00 AM IST target
+    - cron: '20 4 * * *'   # ~10:00 AM IST target
+    - cron: '20 6 * * *'   # ~12:00 PM IST target
+    - cron: '20 8 * * *'   # ~2:00 PM IST target
+    - cron: '20 10 * * *'  # ~4:00 PM IST target
+    - cron: '20 12 * * *'  # ~6:00 PM IST target
+    - cron: '20 14 * * *'  # ~8:00 PM IST target
 
   workflow_dispatch:
     inputs:
@@ -28,27 +29,32 @@ on:
 jobs:
   run-All_collection_recovery:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout code
+      - name: 🧾 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           pip install --upgrade pip
           pip install gspread pandas google-auth
 
-      - name: Run All_collection_recovery.py
+      - name: 🚀 Run All_collection_recovery.py
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
           RUN_OSSUMMARY: ${{ github.event.inputs.run_ossummary }}
           RUN_RECOVERY: ${{ github.event.inputs.run_recovery }}
           RUN_CNGOS: ${{ github.event.inputs.run_cngos }}
         run: |
-          echo "🚀 Running All_collection_recovery.py..."
+          echo "==========================================="
+          echo "⏰ Workflow started at: $(date -u '+%Y-%m-%d %H:%M:%S') UTC"
+          echo "🇮🇳 (IST time: $(TZ='Asia/Kolkata' date '+%Y-%m-%d %H:%M:%S'))"
+          echo "==========================================="
           python All_collection_recovery.py
+          echo "✅ Script complete
