@@ -1,0 +1,31 @@
+name: CNG+EV_Allocation_deallocation
+
+on:
+  schedule:
+    - cron: '0 3 * * *'    # 8:30 AM IST
+    - cron: '30 3 * * *'   # 9:00 AM IST
+    - cron: '0 4 * * *'    # 9:30 AM IST
+  workflow_dispatch:
+
+jobs:
+  run-ev-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'   # ✅ CORRECT VERSION
+
+      - name: Install dependencies
+        run: |
+          pip install gspread google-auth pytz
+
+      - name: CNG+EV_Allocation_deallocation.py
+        env:
+          ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
+        run: |
+          python CNG+EV_Allocation_deallocation.py
