@@ -24,8 +24,8 @@ jobs:
         run: |
           pip install gspread google-auth pytz
 
-      - name: Run EV_combine_data.py
+      - name: CNG+EV_Allocation_deallocation.py
         env:
           ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
         run: |
-          python EV_combine_data.py
+          python CNG+EV_Allocation_deallocation.py
