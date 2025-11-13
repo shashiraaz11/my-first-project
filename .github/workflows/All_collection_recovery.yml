@@ -57,4 +57,4 @@ jobs:
           echo "🇮🇳 (IST time: $(TZ='Asia/Kolkata' date '+%Y-%m-%d %H:%M:%S'))"
           echo "==========================================="
           python All_collection_recovery.py
-          echo "✅ Script complete
+          echo "✅ Script complete"
