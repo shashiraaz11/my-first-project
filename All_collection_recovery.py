@@ -159,24 +159,24 @@ def importCNGOSCollectionFast():
                 return ""
 
         output = []
-        for r in data[1:]:
-            r = r + [""] * 20  # padding for missing cols
+        for s in data[1:]:
+            s = s + [""] * 21  # padding for missing cols
             try:
-                if not r[0]:
+                if not s[0]:
                     continue
-                row_date = datetime.strptime(r[0], "%d/%m/%Y").date()
+                row_date = datetime.strptime(s[0], "%d/%m/%Y").date()
                 if row_date == filter_date and r[1].strip() != "Delhi NCR":
                     mapped = [
-                        r[3],                # Column E
-                        r[0],                # Date
-                        r[1],                # Location
-                        r[2],                # Something else
-                        r[5],                # Name
-                        to_number(r[4]),
-                        to_number(r[10]),
-                        to_number(r[17]),
-                        to_number(r[18]),
-                        to_number(r[19])
+                        s[3],                # Column E
+                        s[0],                # Date
+                        s[1],                # Location
+                        s[2],                # Something else
+                        s[5],                # Name
+                        to_number(s[4]),
+                        to_number(s[10]),
+                        to_number(s[17]),
+                        to_number(s[18]),
+                        to_number(s[19])
                     ]
                     output.append(mapped)
             except Exception as e:
@@ -187,7 +187,7 @@ def importCNGOSCollectionFast():
             return
 
         last_row = len(target.get_all_values())
-        target.batch_clear([f"E3:M{last_row}"])
+        target.batch_clear([f"E3:N{last_row}"])
         target.update("E3", output)
 
         print(f"✅ importCNGOSCollectionFast completed. Rows: {len(output)}")
