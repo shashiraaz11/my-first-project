@@ -175,7 +175,8 @@ def importCNGOSCollectionFast():
                         to_number(r[4]),
                         to_number(r[10]),
                         to_number(r[17]),
-                        to_number(r[18])
+                        to_number(r[18]),
+                        to_number(r[19])
                     ]
                     output.append(mapped)
             except Exception as e:
