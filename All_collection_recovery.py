@@ -165,7 +165,7 @@ def importCNGOSCollectionFast():
                 if not s[0]:
                     continue
                 row_date = datetime.strptime(s[0], "%d/%m/%Y").date()
-                if row_date == filter_date and r[1].strip() != "Delhi NCR":
+                if row_date == filter_date and s[1].strip() != "Delhi NCR":
                     mapped = [
                         s[3],                # Column E
                         s[0],                # Date
