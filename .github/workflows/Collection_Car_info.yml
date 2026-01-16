@@ -1,4 +1,4 @@
-name: Collection_carinfo.py
+name: Collection_carinfo
 
 on:
   schedule:
