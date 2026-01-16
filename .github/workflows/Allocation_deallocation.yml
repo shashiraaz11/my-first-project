@@ -1,0 +1,29 @@
+name:Allocation_deallocation
+
+on:
+  schedule:
+    - cron: "30 4 * * *"   # 10:00 AM IST (GitHub runs in UTC)
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install gspread google-auth
+
+      - name: Run Allocation Script
+        env:
+          ACCOUNT_KEY_JSON: ${{ secrets.ACCOUNT_KEY_JSON }}
+        run: |
+          python Allocation_deallocation.py
